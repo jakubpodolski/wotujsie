@@ -1,0 +1,23 @@
+{
+  "name": "wotujsie-pwa",
+  "version": "1.0.0",
+  "description": "A modern PWA with React frontend and Node.js backend",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"yarn run dev:client\" \"yarn run dev:server\"",
+    "dev:client": "cd client && yarn run dev",
+    "dev:server": "cd server && yarn run dev",
+    "build": "yarn run build:client && yarn run build:server",
+    "build:client": "cd client && yarn run build",
+    "build:server": "cd server && yarn run build",
+    "start": "cd server && yarn start",
+    "install:all": "cd client && yarn && cd ../server && yarn"
+  },
+  "keywords": ["pwa", "react", "nodejs", "typescript"],
+  "author": "Jakub Podolski",
+  "license": "MIT",
+  "packageManager": "yarn@1.22.0",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
