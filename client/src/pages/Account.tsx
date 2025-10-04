@@ -1,9 +1,45 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../components/ui/Card'
+import { LoadingCard } from '../components/ui/LoadingSpinner'
+import { ErrorMessage } from '../components/ui/ErrorBoundary'
+import { useUser } from '../hooks/useApi'
 
 export const Account: React.FC = () => {
   const navigate = useNavigate()
+  const { user, error, isLoading, mutate } = useUser()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 p-6 space-y-6">
+        <LoadingCard />
+        <LoadingCard />
+        <LoadingCard />
+        <LoadingCard />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-900 p-6 space-y-6">
+        <ErrorMessage 
+          error={error} 
+          onRetry={() => mutate()} 
+        />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-900 p-6 space-y-6">
+        <div className="text-center py-12">
+          <p className="text-gray-400">Brak danych użytkownika</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 p-6 space-y-6">
@@ -17,8 +53,8 @@ export const Account: React.FC = () => {
           
           {/* Name and Title */}
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-white">Jan Kowalski</h2>
-            <p className="text-gray-300 text-sm">Żołnierz Rezerwy</p>
+            <h2 className="text-xl font-semibold text-white">{user.name}</h2>
+            <p className="text-gray-300 text-sm">{user.rank}</p>
             
             {/* Status Indicator */}
             <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-green-500">
@@ -65,7 +101,7 @@ export const Account: React.FC = () => {
             </svg>
             <div>
               <p className="text-gray-400 text-sm">Jednostka</p>
-              <p className="text-white font-medium">15. Brygada Obrony Terytorialnej</p>
+              <p className="text-white font-medium">{user.serviceInfo.unit}</p>
             </div>
           </div>
 
@@ -76,7 +112,7 @@ export const Account: React.FC = () => {
             </svg>
             <div>
               <p className="text-gray-400 text-sm">Stopień</p>
-              <p className="text-white font-medium">Kapral (Corporal)</p>
+              <p className="text-white font-medium">{user.serviceInfo.rank}</p>
             </div>
           </div>
 
@@ -87,7 +123,7 @@ export const Account: React.FC = () => {
             </svg>
             <div>
               <p className="text-gray-400 text-sm">Lokalizacja Bazy</p>
-              <p className="text-white font-medium">Warszawa, Polska</p>
+              <p className="text-white font-medium">{user.serviceInfo.baseLocation}</p>
             </div>
           </div>
         </div>
@@ -106,7 +142,7 @@ export const Account: React.FC = () => {
             </svg>
             <div>
               <p className="text-gray-400 text-sm">Email</p>
-              <p className="text-white font-medium">jan.kowalski@wot.mil.pl</p>
+              <p className="text-white font-medium">{user.email}</p>
             </div>
           </div>
 
@@ -117,7 +153,7 @@ export const Account: React.FC = () => {
             </svg>
             <div>
               <p className="text-gray-400 text-sm">Telefon</p>
-              <p className="text-white font-medium">+48 123 456 789</p>
+              <p className="text-white font-medium">{user.phone}</p>
             </div>
           </div>
         </div>

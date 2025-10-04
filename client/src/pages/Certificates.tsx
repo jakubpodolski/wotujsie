@@ -1,49 +1,59 @@
 import React from 'react'
 import { OverallProgress } from '../components/sections/OverallProgress'
 import { CertificateCard } from '../components/sections/CertificateCard'
+import { LoadingCard, LoadingList } from '../components/ui/LoadingSpinner'
+import { ErrorMessage } from '../components/ui/ErrorBoundary'
+import { useUserCertificates, useCertificateProgress } from '../hooks/useApi'
 
 export const Certificates: React.FC = () => {
-  // Mock data for certificate counts
+  const { certificates, error: certificatesError, isLoading: certificatesLoading, mutate: mutateCertificates } = useUserCertificates()
+  const { progress, error: progressError, isLoading: progressLoading } = useCertificateProgress()
+
+  const isLoading = certificatesLoading || progressLoading
+  const error = certificatesError || progressError
+
+  // Certificate stats from API
   const certificateStats = {
-    completed: 1,
-    inProgress: 1,
-    notStarted: 4
+    completed: progress?.completed || 0,
+    inProgress: progress?.inProgress || 0,
+    notStarted: progress?.notStarted || 0
   }
 
-  // Mock certificate data
-  const certificates = [
-    {
-      id: '1',
-      title: 'Certyfikat Pierwszej Pomocy Bojowej',
-      description: 'Naucz się podstawowych procedur medycznych na polu walki, w tym zakładania opasek uciskowych, opatrywania ran i protokołów ewakuacji rannych.',
-      status: 'NOT_STARTED' as const,
-      modules: ['Zakładanie Opasek', 'Opatrywanie Ran', 'Ewakuacja Rannych', 'Zarządzanie Szokiem'],
-      duration: 4,
-      daysLeft: 16,
-      onActionClick: () => console.log('Rozpocznij certyfikat pierwszej pomocy')
-    },
-    {
-      id: '2',
-      title: 'Przegląd Bezpieczeństwa Broni',
-      description: 'Przejrzyj kompleksowe protokoły bezpieczeństwa dotyczące obsługi, przechowywania i konserwacji broni wojskowej i amunicji.',
-      status: 'IN_PROGRESS' as const,
-      modules: ['Bezpieczna Obsługa', 'Bezpieczeństwo na Strzelnicy', 'Konserwacja', 'Protokoły Przechowywania'],
-      duration: 2.5,
-      daysLeft: 8, // Below 10 days threshold - will be red
-      progress: 60,
-      onActionClick: () => console.log('Kontynuuj przegląd bezpieczeństwa broni')
-    },
-    {
-      id: '3',
-      title: 'Szkolenie Taktyczne',
-      description: 'Zaawansowane szkolenie z taktyki wojskowej, współpracy w zespole i strategii bojowych.',
-      status: 'COMPLETED' as const,
-      modules: ['Taktyka Piechoty', 'Współpraca Zespołowa', 'Strategia Bojowa', 'Komunikacja Taktyczna'],
-      duration: 8,
-      daysLeft: 0,
-      onActionClick: () => console.log('Zobacz certyfikat szkolenia taktycznego')
-    }
-  ]
+  const handleActionClick = (certificateId: string, action: string) => {
+    console.log(`${action} certyfikat ${certificateId}`)
+    // TODO: Implement certificate actions
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 p-6 space-y-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-white mb-2">Certyfikaty i Wymagania</h1>
+          <p className="text-gray-300">Zarządzaj swoimi certyfikatami i wymaganiami szkoleniowymi</p>
+        </div>
+        <LoadingCard />
+        <LoadingList count={3} />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-900 p-6 space-y-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-white mb-2">Certyfikaty i Wymagania</h1>
+          <p className="text-gray-300">Zarządzaj swoimi certyfikatami i wymaganiami szkoleniowymi</p>
+        </div>
+        <ErrorMessage 
+          error={error} 
+          onRetry={() => {
+            mutateCertificates()
+            window.location.reload()
+          }} 
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 p-6 space-y-6">
@@ -62,7 +72,7 @@ export const Certificates: React.FC = () => {
 
       {/* Certificates List */}
       <div className="space-y-6">
-        {certificates.map((certificate) => (
+        {certificates?.map((certificate) => (
           <CertificateCard
             key={certificate.id}
             title={certificate.title}
@@ -72,7 +82,7 @@ export const Certificates: React.FC = () => {
             duration={certificate.duration}
             daysLeft={certificate.daysLeft}
             progress={certificate.progress}
-            onActionClick={certificate.onActionClick}
+            onActionClick={() => handleActionClick(certificate.id, 'Akcja')}
           />
         ))}
       </div>

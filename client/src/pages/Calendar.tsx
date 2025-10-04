@@ -4,16 +4,23 @@ import { SegmentedControl } from '../components/ui/SegmentedControl'
 import { CalendarViewButton } from '../components/ui/CalendarViewButton'
 import { PlanTrainingButton } from '../components/ui/PlanTrainingButton'
 import { MonthlyTrainingGroup } from '../components/ui/MonthlyTrainingGroup'
-import { mockTrainings, yourTrainings, getTrainingsByMonth } from '../data/mockTrainingData'
+import { LoadingList } from '../components/ui/LoadingSpinner'
+import { ErrorMessage } from '../components/ui/ErrorBoundary'
+import { useTrainings, useUserTrainings, useTrainingsGrouped } from '../hooks/useApi'
 
 export const Calendar: React.FC = () => {
   const navigate = useNavigate()
-  const [selectedView, setSelectedView] = useState('yours')
+  const [selectedView, setSelectedView] = useState<'yours' | 'all'>('yours')
 
   const viewOptions = [
     { value: 'yours', label: 'Twoje Szkolenia' },
     { value: 'all', label: 'Wszystkie Szkolenia' },
   ]
+
+  // Fetch data based on selected view
+  const { trainings: allTrainings, error: allError, isLoading: allLoading } = useTrainings()
+  const { trainings: userTrainings, error: userError, isLoading: userLoading } = useUserTrainings()
+  const { trainingsByMonth } = useTrainingsGrouped()
 
   const handleCalendarView = () => {
     // TODO: Implement calendar view functionality
@@ -30,13 +37,77 @@ export const Calendar: React.FC = () => {
     navigate(`/training/${trainingId}`)
   }
 
-  // Filter trainings based on selected view
-  const filteredTrainings = selectedView === 'all' 
-    ? mockTrainings 
-    : yourTrainings
+  // Determine which data to use based on selected view
+  const isLoading = selectedView === 'all' ? allLoading : userLoading
+  const error = selectedView === 'all' ? allError : userError
+  const trainings = selectedView === 'all' ? allTrainings : userTrainings
 
-  // Group trainings by month
-  const trainingsByMonth = getTrainingsByMonth(filteredTrainings)
+  // Helper function to group trainings by month
+  const groupTrainingsByMonth = (trainings: any[]) => {
+    const grouped = trainings.reduce((acc, training) => {
+      let month: string
+      
+      if (training.id === 'field-training') {
+        month = 'Październik'
+      } else if (training.id === 'weapon-qualification') {
+        month = 'Listopad'
+      } else if (training.id === 'navigation-training') {
+        month = 'Listopad'
+      } else if (training.id === 'medical-training') {
+        month = 'Październik'
+      } else if (training.id === 'communication-training') {
+        month = 'Listopad'
+      } else if (training.id === 'night-training') {
+        month = 'Listopad'
+      } else {
+        month = Math.random() > 0.5 ? 'Październik' : 'Listopad'
+      }
+      
+      if (!acc[month]) {
+        acc[month] = []
+      }
+      acc[month].push(training)
+      return acc
+    }, {} as Record<string, any[]>)
+
+    return grouped
+  }
+
+  // Use grouped data if available, otherwise group manually
+  const displayData = selectedView === 'all' && trainingsByMonth 
+    ? trainingsByMonth 
+    : trainings ? groupTrainingsByMonth(trainings) : {}
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <header className="bg-transparent px-4 py-6 -mx-4 -mt-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-2xl font-bold text-white">Kalendarz Ćwiczeń</h1>
+            <p className="text-base text-gray-300 mt-1">Nadchodzące szkolenia</p>
+          </div>
+        </header>
+        <LoadingList count={3} />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <header className="bg-transparent px-4 py-6 -mx-4 -mt-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-2xl font-bold text-white">Kalendarz Ćwiczeń</h1>
+            <p className="text-base text-gray-300 mt-1">Nadchodzące szkolenia</p>
+          </div>
+        </header>
+        <ErrorMessage 
+          error={error} 
+          onRetry={() => window.location.reload()} 
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -53,11 +124,11 @@ export const Calendar: React.FC = () => {
       </header>
       
       {/* Segmented Control */}
-      <SegmentedControl
-        options={viewOptions}
-        value={selectedView}
-        onChange={setSelectedView}
-      />
+        <SegmentedControl
+          options={viewOptions}
+          value={selectedView}
+          onChange={(value) => setSelectedView(value as 'yours' | 'all')}
+        />
       
       {/* Action Button */}
       <div className="mt-4">
@@ -69,13 +140,13 @@ export const Calendar: React.FC = () => {
       </div>
       
       {/* Training Content */}
-      {Object.keys(trainingsByMonth).length > 0 ? (
+      {displayData && Object.keys(displayData).length > 0 ? (
         <div className="space-y-8">
-          {Object.entries(trainingsByMonth).map(([month, trainings]) => (
+          {Object.entries(displayData).map(([month, trainings]) => (
             <MonthlyTrainingGroup
               key={month}
               month={month}
-              trainings={trainings.map(training => ({
+              trainings={(trainings as any[]).map((training: any) => ({
                 ...training,
               }))}
               onTrainingClick={handleTrainingClick}

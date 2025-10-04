@@ -44,7 +44,7 @@ export const UnifiedAlert: React.FC<UnifiedAlertProps> = ({
       )}
     >
       {/* Mobilization Alert Section */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between">
         {/* Left section with icon and text */}
         <div className="flex items-center space-x-3">
           {/* Shield Icon */}
@@ -95,7 +95,7 @@ export const UnifiedAlert: React.FC<UnifiedAlertProps> = ({
       {incident && (
         <>
           {/* Separator line */}
-          <div className="h-px bg-[#8B2C2C] mb-4"></div>
+          <div className="h-px bg-[#8B2C2C] my-4"></div>
 
           {/* Header with warning icon and title */}
           <div className="flex items-center space-x-3 mb-3">

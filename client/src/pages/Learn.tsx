@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { Input } from '../components/ui/Input'
 import { ProcedureCard } from '../components/ui/ProcedureCard'
-import { mockProcedureData } from '../data/mockProcedureData'
+import { LoadingList } from '../components/ui/LoadingSpinner'
+import { ErrorMessage } from '../components/ui/ErrorBoundary'
+import { useProcedures, useProcedureSearch } from '../hooks/useApi'
 
 export const Learn: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -12,8 +14,18 @@ export const Learn: React.FC = () => {
     </svg>
   )
 
+  // Use search API if there's a query, otherwise use all procedures
+  const { procedures: allProcedures, error: allError, isLoading: allLoading } = useProcedures()
+  const { procedures: searchResults, error: searchError, isLoading: searchLoading } = useProcedureSearch(searchQuery)
+
+  // Determine which data to use
+  const isLoading = searchQuery ? searchLoading : allLoading
+  const error = searchQuery ? searchError : allError
+  const procedures = searchQuery ? searchResults : allProcedures
+
   // Filter categories that have matching procedures
-  const filteredCategories = mockProcedureData.filter(category => {
+  const filteredCategories = procedures?.filter(category => {
+    if (!searchQuery) return true
     const hasMatchingProcedures = category.procedures.some(procedure =>
       procedure.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       procedure.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -22,7 +34,7 @@ export const Learn: React.FC = () => {
       )
     )
     return hasMatchingProcedures
-  })
+  }) || []
 
   return (
     <div className="space-y-6">
@@ -53,7 +65,14 @@ export const Learn: React.FC = () => {
       
       {/* Procedure Cards */}
       <div className="space-y-6">
-        {filteredCategories.length > 0 ? (
+        {isLoading ? (
+          <LoadingList count={3} />
+        ) : error ? (
+          <ErrorMessage 
+            error={error} 
+            onRetry={() => window.location.reload()} 
+          />
+        ) : filteredCategories.length > 0 ? (
           filteredCategories.map((category) => (
             <ProcedureCard
               key={category.id}

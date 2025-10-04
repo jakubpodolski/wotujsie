@@ -10,6 +10,10 @@ import { TrainingSchedule } from '../components/sections/TrainingSchedule'
 import { RequiredEquipment } from '../components/sections/RequiredEquipment'
 import { TrainingRegistrationButton } from '../components/sections/TrainingRegistrationButton'
 import { RegistrationStatus } from '../components/sections/RegistrationStatus'
+import { LoadingCard } from '../components/ui/LoadingSpinner'
+import { ErrorMessage } from '../components/ui/ErrorBoundary'
+import { useTraining } from '../hooks/useApi'
+import { trainingsApi } from '../services/api'
 
 interface TrainingDetail {
   id: string
@@ -45,8 +49,9 @@ interface TrainingDetail {
   }[]
 }
 
-// Mock data for training details
-const trainingDetails: Record<string, TrainingDetail> = {
+// Mock data for training details (removed - now using API)
+/*
+const mockTrainingDetails: Record<string, TrainingDetail> = {
   'field-training': {
     id: 'field-training',
     title: 'Ćwiczenia polowe',
@@ -480,13 +485,51 @@ const trainingDetails: Record<string, TrainingDetail> = {
     ]
   }
 }
+*/
 
 export const TrainingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [isRegistered, setIsRegistered] = useState(false)
   
-  const training = id ? trainingDetails[id] : null
+  const { training, error, isLoading, mutate } = useTraining(id || '')
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <div className="container mx-auto px-4 py-8">
+          <LoadingCard />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+            <div className="lg:col-span-2 space-y-6">
+              <LoadingCard />
+              <LoadingCard />
+              <LoadingCard />
+            </div>
+            <div className="space-y-6">
+              <LoadingCard />
+              <LoadingCard />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <XCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Błąd ładowania</h1>
+          <p className="text-gray-400 mb-4">Nie udało się załadować danych szkolenia.</p>
+          <ErrorMessage error={error} onRetry={() => mutate()} />
+          <Button onClick={() => navigate('/')} className="bg-blue-600 hover:bg-blue-700 mt-4">
+            Powrót do strony głównej
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   if (!training) {
     return (
@@ -519,14 +562,24 @@ export const TrainingDetail: React.FC = () => {
     return date
   }
 
-  const handleRegister = () => {
-    console.log(`Rejestracja na szkolenie: ${training?.id}`)
-    setIsRegistered(true)
+  const handleRegister = async () => {
+    try {
+      await trainingsApi.register(training.id, '1')
+      setIsRegistered(true)
+      mutate() // Refresh training data
+    } catch (error) {
+      console.error('Failed to register for training:', error)
+    }
   }
 
-  const handleCancelRegistration = () => {
-    console.log(`Anulowanie rejestracji na szkolenie: ${training?.id}`)
-    setIsRegistered(false)
+  const handleCancelRegistration = async () => {
+    try {
+      await trainingsApi.cancelRegistration(training.id, '1')
+      setIsRegistered(false)
+      mutate() // Refresh training data
+    } catch (error) {
+      console.error('Failed to cancel training registration:', error)
+    }
   }
 
   // Check if user is already registered based on training data
@@ -557,7 +610,7 @@ export const TrainingDetail: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Overview Component */}
             <TrainingOverview
-              description={training.longDescription}
+              description={training.longDescription || training.description}
               location={training.location}
               duration={training.duration}
               dateRange={training.dateRange}

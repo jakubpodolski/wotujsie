@@ -39,8 +39,8 @@ const ProcedureItem: React.FC<{
         onClick={onToggle}
         className="w-full px-6 py-3 text-left hover:bg-gray-700 transition-colors"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center justify-between gap-2 w-full">
             <h4 className={`font-medium text-white ${isExpanded ? 'underline' : ''}`}>
               {procedure.title}
             </h4>
