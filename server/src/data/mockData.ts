@@ -6,7 +6,8 @@ import {
   Certificate, 
   User, 
   Incident,
-  TrainingRegistration 
+  TrainingRegistration,
+  Notification 
 } from './models'
 
 // Mock Users
@@ -790,13 +791,62 @@ export const mockIncidents: Incident[] = [
     title: 'Powodzie',
     description: 'Zgłoszono poważne powodzie w obszarach operacyjnych. Zgłoś się do najbliższej jednostki.',
     nearestStation: {
-      name: '18. Batalion WOT',
-      address: 'ul. Kościuszki 45, Kraków',
-      distance: '3.2 km'
+      name: 'Dowództwo Operacyjne WOT',
+      address: 'ul. Marszałkowska 100/102, 00-514 Warszawa',
+      distance: '2.3 km'
     },
     createdAt: '2024-01-15T08:00:00Z'
+  },
+  {
+    id: 'fire-emergency-002',
+    type: 'fire',
+    severity: 'WYSOKI',
+    title: 'Pożar Lasu',
+    description: 'Duży pożar lasu w rejonie Kampinosu. Wymagana natychmiastowa interwencja.',
+    nearestStation: {
+      name: 'Centrum Dowodzenia WOT',
+      address: 'ul. Żwirki i Wigury 9, 00-001 Warszawa',
+      distance: '1.8 km'
+    },
+    createdAt: '2024-01-14T14:30:00Z'
+  },
+  {
+    id: 'medical-alert-003',
+    type: 'medical',
+    severity: 'ŚREDNI',
+    title: 'Akcja Medyczna',
+    description: 'Potrzebna pomoc medyczna w centrum miasta. Zgłoś się do punktu zbornego.',
+    nearestStation: {
+      name: 'Sztab Główny WOT',
+      address: 'ul. Nowowiejska 2, 00-001 Warszawa',
+      distance: '3.1 km'
+    },
+    createdAt: '2024-01-13T09:15:00Z'
   }
 ]
+
+// Mock Notifications - Start with minimal notifications
+export const mockNotifications: Notification[] = [
+  // Only keep one important notification for initial experience
+  {
+    id: 'notif-1',
+    userId: null, // Sent to all users
+    title: 'Witamy w Systemie',
+    message: 'System WotujSie jest gotowy do użycia. Sprawdź dostępne szkolenia i certyfikaty.',
+    priority: 'normal',
+    sentAt: '2024-01-15T10:00:00Z',
+    read: true,
+    readAt: '2024-01-15T10:05:00Z'
+  }
+]
+
+// Mock system state - No initial status, will be set by first notification
+// This allows testing the notification system from a clean state
+export const mockSystemState = {
+  mobilizationStatus: null as 'WYSOKI' | 'ŚREDNI' | 'NISKI' | null,
+  lastStatusChange: null as string | null,
+  statusChangeReason: null as string | null
+}
 
 // Helper functions
 export const getTrainingsByMonth = (trainings: Training[]) => {
@@ -840,4 +890,41 @@ export const getUserTrainings = (userId: string) => {
   return mockTrainings.filter(training => 
     userRegistrations.some(reg => reg.trainingId === training.id)
   )
+}
+
+// Update mobilization status based on notification priority
+export const updateMobilizationStatus = (priority: string, notificationTitle: string) => {
+  let newStatus: 'WYSOKI' | 'ŚREDNI' | 'NISKI'
+  let reason: string
+
+  switch (priority) {
+    case 'urgent':
+      newStatus = 'WYSOKI'
+      reason = `Urgent notification: ${notificationTitle}`
+      break
+    case 'high':
+      newStatus = 'WYSOKI'
+      reason = `High priority notification: ${notificationTitle}`
+      break
+    case 'normal':
+      newStatus = 'ŚREDNI'
+      reason = `Normal priority notification: ${notificationTitle}`
+      break
+    case 'low':
+      newStatus = 'NISKI'
+      reason = `Low priority notification: ${notificationTitle}`
+      break
+    default:
+      return // No change for unknown priorities
+  }
+
+  // Always update if status is null (first notification) or if status actually changes
+  const isInitialization = mockSystemState.mobilizationStatus === null
+  if (isInitialization || mockSystemState.mobilizationStatus !== newStatus) {
+    mockSystemState.mobilizationStatus = newStatus
+    mockSystemState.lastStatusChange = new Date().toISOString()
+    mockSystemState.statusChangeReason = reason
+    
+    console.log(`Mobilization status ${isInitialization ? 'initialized' : 'changed'} to ${newStatus} due to: ${reason}`)
+  }
 }

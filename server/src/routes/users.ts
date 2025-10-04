@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { mockUsers } from '../data/mockData'
+import { mockUsers, mockNotifications } from '../data/mockData'
 
 const router = Router()
 
@@ -186,6 +186,75 @@ router.put('/:id/notifications', (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to update notification settings'
+    })
+  }
+})
+
+// Get user notifications
+router.get('/:id/notifications', (req, res) => {
+  try {
+    const { id } = req.params
+    const user = mockUsers.find(u => u.id === id)
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      })
+    }
+    
+    // Get notifications for this user (both specific and general)
+    const userNotifications = mockNotifications.filter(notif => 
+      notif.userId === id || notif.userId === null
+    ).sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+    
+    res.json({
+      success: true,
+      data: userNotifications,
+      count: userNotifications.length
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch notifications'
+    })
+  }
+})
+
+// Mark notification as read
+router.put('/:id/notifications/:notificationId/read', (req, res) => {
+  try {
+    const { id, notificationId } = req.params
+    const user = mockUsers.find(u => u.id === id)
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      })
+    }
+    
+    const notification = mockNotifications.find(n => n.id === notificationId)
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        error: 'Notification not found'
+      })
+    }
+    
+    // Mark as read
+    notification.read = true
+    notification.readAt = new Date().toISOString()
+    
+    res.json({
+      success: true,
+      data: notification,
+      message: 'Notification marked as read'
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to mark notification as read'
     })
   }
 })

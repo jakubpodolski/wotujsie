@@ -9,6 +9,7 @@ import { procedureRoutes } from './procedures'
 import { certificateRoutes } from './certificates'
 import { calendarRoutes } from './calendar'
 import { systemRoutes } from './system'
+import { adminRoutes } from './admin'
 
 export const apiRoutes = Router()
 
@@ -23,6 +24,7 @@ apiRoutes.use('/procedures', procedureRoutes)
 apiRoutes.use('/certificates', certificateRoutes)
 apiRoutes.use('/calendar', calendarRoutes)
 apiRoutes.use('/system', systemRoutes)
+apiRoutes.use('/admin', adminRoutes)
 
 // API info endpoint
 apiRoutes.get('/', (req, res) => {

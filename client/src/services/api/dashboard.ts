@@ -30,12 +30,24 @@ export interface Incident {
   }
 }
 
+export interface Notification {
+  id: string
+  userId?: string
+  title: string
+  message: string
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+  sentAt: string
+  read: boolean
+  readAt?: string
+}
+
 export interface DashboardData {
   availableExercises: AvailableExercise[]
   remainingExercises: number
   certifications: Certification[]
   currentIncident: Incident | null
   mobilizationStatus: string
+  notifications: Notification[]
 }
 
 export interface UpcomingTraining {

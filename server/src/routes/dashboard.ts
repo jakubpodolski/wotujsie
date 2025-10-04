@@ -3,6 +3,8 @@ import {
   mockTrainings, 
   mockCertificates, 
   mockIncidents, 
+  mockNotifications,
+  mockSystemState,
   getUserTrainings,
   getTrainingsByMonth 
 } from '../data/mockData'
@@ -68,6 +70,11 @@ router.get('/:userId', (req, res) => {
       nearestStation: currentIncidents[0].nearestStation
     } : null
     
+    // Get user notifications (both specific and general)
+    const userNotifications = mockNotifications.filter(notif => 
+      notif.userId === userId || notif.userId === null
+    ).sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+    
     res.json({
       success: true,
       data: {
@@ -75,7 +82,8 @@ router.get('/:userId', (req, res) => {
         remainingExercises: Math.max(0, 4 - availableExercises.length),
         certifications,
         currentIncident,
-        mobilizationStatus: 'WYSOKI'
+        mobilizationStatus: mockSystemState.mobilizationStatus,
+        notifications: userNotifications
       }
     })
   } catch (error) {

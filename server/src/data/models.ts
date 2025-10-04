@@ -127,3 +127,14 @@ export interface TrainingRegistration {
   registeredAt: string
   status: 'registered' | 'cancelled' | 'completed'
 }
+
+export interface Notification {
+  id: string
+  userId?: string // null means sent to all users
+  title: string
+  message: string
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+  sentAt: string
+  read: boolean
+  readAt?: string
+}
