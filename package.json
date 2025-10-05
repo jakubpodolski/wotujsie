@@ -4,9 +4,10 @@
   "description": "A modern PWA with React frontend and Node.js backend",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"yarn run dev:client\" \"yarn run dev:server\"",
+    "dev": "concurrently \"yarn run dev:client\" \"yarn run dev:server\" \"yarn run dev:admin\"",
     "dev:client": "cd client && yarn run dev",
     "dev:server": "cd server && yarn run dev",
+    "dev:admin": "cd admin && yarn run dev",
     "build": "yarn run build:client && yarn run build:server",
     "build:client": "cd client && yarn run build",
     "build:server": "cd server && yarn run build",
